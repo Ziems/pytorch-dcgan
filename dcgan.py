@@ -135,8 +135,12 @@ for epoch in range(N_EPOCHS):
         d_optim.zero_grad()
         mini_batch = X.size()[0]
 
-        y_real = torch.ones(mini_batch).to(device)
-        y_fake = torch.zeros(mini_batch).to(device)
+        y_real = torch.ones(mini_batch)
+        y_fake = torch.zeros(mini_batch)
+
+        X = Variable(X.cuda()).to(device)
+        y_real = Variable(y_real.cuda()).to(device)
+        y_fake = Variable(y_fake.cuda()).to(device)
 
         discriminator_res = discriminator(X).squeeze()
         discriminator_real_loss = loss(discriminator_res, y_real)
