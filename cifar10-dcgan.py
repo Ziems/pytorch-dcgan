@@ -8,7 +8,7 @@ import torchvision.datasets as datasets
 import matplotlib.pyplot as plt
 import os
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 print("using " + str(device))
 
 def sample_generator(model, index):
