@@ -8,14 +8,13 @@ import torchvision.datasets as datasets
 import matplotlib.pyplot as plt
 import os
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 print("using " + str(device))
 
 def sample_generator(model, index):
     z = torch.randn((2, 100)).view(-1, 100, 1, 1).to(device)
-    image = model(z)[0]
-    image = transforms.ToPILImage(mode='RGB')(image)
+    image = model(z)[0].cpu()
+    image = transforms.ToPILImage(mode='RGB')(image.detach().numpy())
     if not os.path.exists('./samples/'):
         os.makedirs('./samples/')
     image.save("./samples/" + str(index) + ".png")
