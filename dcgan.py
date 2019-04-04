@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torchvision
 from torchvision import transforms
@@ -121,6 +120,9 @@ g_optim = torch.optim.SGD(
     nesterov=True
 )
 
+discriminator = discriminator.to(device)
+generator = generator.to(device)
+
 N_EPOCHS = 20
 
 for epoch in range(N_EPOCHS):
@@ -136,12 +138,8 @@ for epoch in range(N_EPOCHS):
         d_optim.zero_grad()
         mini_batch = X.size()[0]
 
-        y_real = torch.ones(mini_batch)
-        y_fake = torch.zeros(mini_batch)
-
-        X = Variable(X.cuda()).to(device)
-        y_real = Variable(y_real.cuda()).to(device)
-        y_fake = Variable(y_fake.cuda()).to(device)
+        y_real = torch.ones(mini_batch).to(device)
+        y_fake = torch.zeros(mini_batch).to(device)
 
         discriminator_res = discriminator(X).squeeze()
         discriminator_real_loss = loss(discriminator_res, y_real)
