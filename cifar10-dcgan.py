@@ -9,13 +9,12 @@ import matplotlib.pyplot as plt
 import os
 
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
 print("using " + str(device))
 
 def sample_generator(model, index):
     z = torch.randn((2, 100)).view(-1, 100, 1, 1).to(device)
-    image = model(z)[0]
-    image = transforms.ToPILImage(mode='RGB')(image)
+    image = model(z)[0].cpu()
+    image = transforms.ToPILImage(mode='RGB')(image.detach().numpy())
     if not os.path.exists('./samples/'):
         os.makedirs('./samples/')
     image.save("./samples/" + str(index) + ".png")
@@ -181,3 +180,5 @@ for epoch in range(N_EPOCHS):
 
         G_losses.append(G_train_loss.data.item())
         print("G_loss: ", G_losses[-1])
+
+    print("Epoch: ", epoch)
