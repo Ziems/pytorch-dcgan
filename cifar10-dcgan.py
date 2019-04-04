@@ -6,9 +6,20 @@ import torchvision
 from torchvision import transforms
 import torchvision.datasets as datasets
 import matplotlib.pyplot as plt
+import os
 
-device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 print("using " + str(device))
+
+def sample_generator(model, index):
+    z = torch.randn((2, 100)).view(-1, 100, 1, 1).to(device)
+    image = model(z)[0]
+    image = transforms.ToPILImage(mode='RGB')(image)
+    if not os.path.exists('./samples/'):
+        os.makedirs('./samples/')
+    image.save("./samples/" + str(index) + ".png")
+
 
 class Generator(nn.Module):
     def __init__(self):
@@ -64,7 +75,6 @@ class Discriminator(nn.Module):
         x = self.conv2(x)
         x = self.activation2(x)
         x = self.maxpool2(x)
-        print("X size: ", x.size())
         x = x.view(-1, 128 * 6 * 6) # flatten
         x = self.fc1(x)
         x = self.activation3(x)
@@ -127,6 +137,7 @@ N_EPOCHS = 20
 for epoch in range(N_EPOCHS):
     discriminator.train()
     generator.train()
+    sample_generator(generator, epoch)
 
     D_losses = []
     G_losses = []
@@ -170,9 +181,3 @@ for epoch in range(N_EPOCHS):
 
         G_losses.append(G_train_loss.data.item())
         print("G_loss: ", G_losses[-1])
-
-
-
-
-
-
