@@ -8,7 +8,7 @@ import torchvision.datasets as datasets
 import matplotlib.pyplot as plt
 import os
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 print("using " + str(device))
 
 def sample_generator(model, index):
@@ -102,21 +102,19 @@ class Discriminator(nn.Module):
         x = x.view(-1, 3, 32, 32)
         x = self.conv1(x)
         x = self.act1(x)
-        print("X Shape0: ", x.shape)
+
         x = self.conv2(x)
         x = self.bn1(x)
         x = self.act2(x)
-        print("X Shape1: ", x.shape)
 
         x = self.conv3(x)
         x = self.bn2(x)
         x = self.act3(x)
-        print("X Shape2: ", x.shape)
 
         x = self.conv4(x)
         x = self.bn3(x)
         x = self.act4(x)
-        print("X Shape3: ", x.shape)
+
         x = x.view(-1, 256 * 2 * 2)
         x = self.fc1(x)
         x = self.act5(x)
@@ -153,14 +151,14 @@ test_dl = DataLoader(
 
 loss = nn.BCELoss()
 
-d_optim = torch.optim.SGD(
+d_optim = torch.optim.Adam(
     discriminator.parameters(),
     lr=0.0005,
     momentum=0.9,
     nesterov=True
 )
 
-g_optim = torch.optim.SGD(
+g_optim = torch.optim.Adam(
     generator.parameters(),
     lr=0.0005,
     momentum=0.9,
@@ -170,7 +168,7 @@ g_optim = torch.optim.SGD(
 discriminator = discriminator.to(device)
 generator = generator.to(device)
 
-N_EPOCHS = 20
+N_EPOCHS = 100
 
 for epoch in range(N_EPOCHS):
     generator.eval()
