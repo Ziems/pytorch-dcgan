@@ -19,7 +19,8 @@ def sample_generator(model, index):
         os.makedirs('./samples/')
     image.save("./samples/" + str(index) + ".png")
 
-
+# Based on
+# https://medium.com/@stepanulyanin/dcgan-adventures-with-cifar10-905fb0a24d21
 class Generator(nn.Module):
     def __init__(self):
         super().__init__()
@@ -74,40 +75,51 @@ class Discriminator(nn.Module):
     def __init__(self):
         super().__init__()
 
+        # 3 x 32 x 32
+        self.conv1 = nn.Conv2d(3, 32, (5, 5), 2, padding=2)
+        self.act1 = nn.LeakyReLU()
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=5, padding=2)
-        self.activation1 = nn.Tanh()
-        self.maxpool1 = nn.MaxPool2d(kernel_size=(2, 2))
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=(5, 5))
-        self.activation2 = nn.Tanh()
-        self.maxpool2 = nn.MaxPool2d(kernel_size=(2, 2))
+        # 32 x 16 x 16
+        self.conv2 = nn.Conv2d(32, 64, (5, 5), 2, padding=2)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.act2 = nn.LeakyReLU()
 
-        self.fc1 = nn.Linear(128*6*6, 1024)
-        self.activation3 = nn.Tanh()
-        self.fc2 = nn.Linear(1024, 512)
-        self.activation4 = nn.Tanh()
-        self.fc3 = nn.Linear(512, 256)
-        self.activation5 = nn.Tanh()
-        self.fc4 = nn.Linear(256, 1)
-        self.activation6 = nn.Sigmoid()
+        # 64 x 8 x 8
+        self.conv3 = nn.Conv2d(64, 128, (5, 5), 2, padding=2)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.act3 = nn.LeakyReLU()
+
+        # 128 x 4 x 4
+        self.conv4 = nn.Conv2d(128, 256, (5, 5), 2, padding=2)
+        self.bn3 = nn.BatchNorm2d(256)
+        self.act4 = nn.LeakyReLU()
+
+        # 256 x 2 x 2
+        self.fc1 = nn.Linear(256 * 2 * 2, 1)
+        self.act5 = nn.Sigmoid()
     
     def forward(self, x):
         x = x.view(-1, 3, 32, 32)
         x = self.conv1(x)
-        x = self.activation1(x)
-        x = self.maxpool1(x)
+        x = self.act1(x)
+        print("X Shape0: ", x.shape)
         x = self.conv2(x)
-        x = self.activation2(x)
-        x = self.maxpool2(x)
-        x = x.view(-1, 128 * 6 * 6) # flatten
+        x = self.bn1(x)
+        x = self.act2(x)
+        print("X Shape1: ", x.shape)
+
+        x = self.conv3(x)
+        x = self.bn2(x)
+        x = self.act3(x)
+        print("X Shape2: ", x.shape)
+
+        x = self.conv4(x)
+        x = self.bn3(x)
+        x = self.act4(x)
+        print("X Shape3: ", x.shape)
+        x = x.view(-1, 256 * 2 * 2)
         x = self.fc1(x)
-        x = self.activation3(x)
-        x = self.fc2(x)
-        x = self.activation4(x)
-        x = self.fc3(x)
-        x = self.activation5(x)
-        x = self.fc4(x)
-        x = self.activation6(x)
+        x = self.act5(x)
         return x
 
 trans = transforms.Compose([
@@ -118,7 +130,7 @@ mnist_trainset = datasets.CIFAR10(root='./data/cifar10', train=True, download=Tr
 mnist_testset = datasets.CIFAR10(root='./data/cifar10', train=False, download=True, transform=None)
 
 discriminator = Discriminator()
-x = mnist_trainset[13][0]
+x = torch.rand(2, 3, 32, 32)
 discriminator.forward(x)
 
 generator = Generator()
