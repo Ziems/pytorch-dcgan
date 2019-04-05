@@ -8,7 +8,7 @@ import torchvision.datasets as datasets
 import matplotlib.pyplot as plt
 import os
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 print("using " + str(device))
 
 def sample_generator(model, index):
@@ -25,10 +25,10 @@ class Generator(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(100, 1024)
         self.activation1 = nn.Tanh()
-        self.fc2 = nn.Linear(1024, 256*8*8)
-        self.bn1 = nn.BatchNorm1d(num_features=256*8*8)
+        self.fc2 = nn.Linear(1024, 512*8*8)
+        self.bn1 = nn.BatchNorm1d(num_features=512*8*8)
         self.activation2 = nn.Tanh()
-        self.conv1 = nn.Conv2d(256, 64, kernel_size=(5, 5), padding=0)
+        self.conv1 = nn.Conv2d(512, 64, kernel_size=(5, 5), padding=0)
         self.activation3 = nn.Tanh()
         self.conv2 = nn.Conv2d(64, 3, kernel_size=(5, 5), padding=2)
         self.activation4 = nn.Tanh()
@@ -40,7 +40,7 @@ class Generator(nn.Module):
         x = self.fc2(x)
         x = self.bn1(x)
         x = self.activation2(x)
-        x = x.view(-1, 256, 8, 8)
+        x = x.view(-1, 512, 8, 8)
         x = F.interpolate(x, (16, 16))
         x = self.conv1(x)
         x = self.activation3(x)
