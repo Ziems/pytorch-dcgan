@@ -8,7 +8,7 @@ import torchvision.datasets as datasets
 import matplotlib.pyplot as plt
 import os
 
-device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print("using " + str(device))
 
 def sample_generator(model, index):
@@ -23,35 +23,58 @@ def sample_generator(model, index):
 class Generator(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(100, 1024)
-        self.activation1 = nn.Tanh()
-        self.fc2 = nn.Linear(1024, 512*8*8)
-        self.bn1 = nn.BatchNorm1d(num_features=512*8*8)
-        self.activation2 = nn.Tanh()
-        self.conv1 = nn.Conv2d(512, 64, kernel_size=(5, 5), padding=0)
-        self.activation3 = nn.Tanh()
-        self.conv2 = nn.Conv2d(64, 3, kernel_size=(5, 5), padding=2)
-        self.activation4 = nn.Tanh()
+        self.fc1 = nn.Linear(100, 2 * 2 * 256)
+        self.bn1 = nn.BatchNorm2d(256)
+        self.activation1 = nn.LeakyReLU()
+        # 256 x 2 x 2
+
+        self.conv1 = nn.ConvTranspose2d(256, 128, (5, 5), padding=1)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.activation2 = nn.LeakyReLU()
+        # 128 x 4 x 4
+
+        self.conv2 = nn.ConvTranspose2d(128, 64, (5, 5))
+        self.bn3 = nn.BatchNorm2d(64)
+        self.activation3 = nn.LeakyReLU()
+        # 64 x 8 x 8
+
+        self.conv3 = nn.ConvTranspose2d(64, 32, (5, 5), stride=2, padding=2, output_padding=1)
+        self.bn4 = nn.BatchNorm2d(32)
+        self.activation4 = nn.LeakyReLU()
+        # 32 x 16 x 16
+
+        self.logits = nn.ConvTranspose2d(32, 3, (5, 5), stride=2, padding=2, output_padding=1)
+        # 3 x 32 x 32
+        self.tanh = nn.Tanh()
     
     def forward(self, x):
         x = x.view(-1, 100)
         x = self.fc1(x)
-        x = self.activation1(x)
-        x = self.fc2(x)
+        x = x.view(-1, 256, 2, 2)
         x = self.bn1(x)
-        x = self.activation2(x)
-        x = x.view(-1, 512, 8, 8)
-        x = F.interpolate(x, (16, 16))
+        x = self.activation1(x)
+
         x = self.conv1(x)
-        x = self.activation3(x)
-        x = F.interpolate(x, (32, 32))
+        x = self.bn2(x)
+        x = self.activation2(x)
+
         x = self.conv2(x)
+        x = self.bn3(x)
+        x = self.activation3(x)
+
+        x = self.conv3(x)
+        x = self.bn4(x)
         x = self.activation4(x)
+
+        x = self.logits(x)
+        x = self.tanh(x)
         return x
 
 class Discriminator(nn.Module):
     def __init__(self):
         super().__init__()
+
+
         self.conv1 = nn.Conv2d(3, 64, kernel_size=5, padding=2)
         self.activation1 = nn.Tanh()
         self.maxpool1 = nn.MaxPool2d(kernel_size=(2, 2))
@@ -138,9 +161,10 @@ generator = generator.to(device)
 N_EPOCHS = 20
 
 for epoch in range(N_EPOCHS):
+    generator.eval()
+    sample_generator(generator, epoch)
     discriminator.train()
     generator.train()
-    sample_generator(generator, epoch)
 
     D_losses = []
     G_losses = []
