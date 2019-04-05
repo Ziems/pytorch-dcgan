@@ -63,8 +63,10 @@ class Discriminator(nn.Module):
         self.activation3 = nn.Tanh()
         self.fc2 = nn.Linear(1024, 512)
         self.activation4 = nn.Tanh()
-        self.fc3 = nn.Linear(512, 1)
-        self.activation5 = nn.Sigmoid()
+        self.fc3 = nn.Linear(512, 256)
+        self.activation5 = nn.Tanh()
+        self.fc4 = nn.Linear(256, 1)
+        self.activation6 = nn.Sigmoid()
     
     def forward(self, x):
         x = x.view(-1, 3, 32, 32)
@@ -81,6 +83,8 @@ class Discriminator(nn.Module):
         x = self.activation4(x)
         x = self.fc3(x)
         x = self.activation5(x)
+        x = self.fc4(x)
+        x = self.activation6(x)
         return x
 
 trans = transforms.Compose([
