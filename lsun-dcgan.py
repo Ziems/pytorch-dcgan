@@ -17,96 +17,73 @@ print("using " + str(device))
 class Generator(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.ConvTranspose2d(100, 64 * 8, 4, 1, 0, bias=False)
-        self.bn1 = nn.BatchNorm2d(64 * 8)
-        self.act1 = nn.ReLU()
-        #64*8 x 4 x 4
+        self.main = nn.Sequential(
+            nn.ConvTranspose2d(100, 64 * 8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(64 * 8),
+            nn.ReLU(),
+            #64*8 x 4 x 4
 
-        self.conv2 = nn.ConvTranspose2d(64 * 8, 64 * 4, 4, 2, 1, bias=False)
-        self.bn2 = nn.BatchNorm2d(64 * 4)
-        self.act3 = nn.ReLU()
-        # 64*4 x 8 x 8
+            nn.ConvTranspose2d(64 * 8, 64 * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64 * 4),
+            nn.ReLU(),
+            # 64*4 x 8 x 8
 
-        self.conv3 = nn.ConvTranspose2d(64 * 4, 64 * 2, 4, 2, 1, bias=False)
-        self.bn3 = nn.BatchNorm2d(64 * 2)
-        self.act4 = nn.ReLU()
-        # 64*2 x 16 x 16
+            nn.ConvTranspose2d(64 * 4, 64 * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64 * 2),
+            nn.ReLU(),
+            # 64*2 x 16 x 16
 
-        self.conv4 = nn.ConvTranspose2d(64 * 2, 64, 4, 2, 1, bias=False)
-        self.bn4 = nn.BatchNorm2d(64)
-        self.act5 = nn.ReLU()
-        #64 x 32 x 32
+            nn.ConvTranspose2d(64 * 2, 64, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            #64 x 32 x 32
 
-        self.conv5 = nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False)
-        self.act6 = nn.Tanh()
+            nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False),
+            nn.Tanh(),
+        )
     
     def forward(self, x):
         x = x.view(-1, 100, 1, 1)
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.act1(x)
-
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.act3(x)
-
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.act4(x)
-
-        x = self.conv4(x)
-        x = self.bn4(x)
-        x = self.act5(x)
-
-        x = self.conv5(x)
-        x = self.act6(x)
+        if str(device) is not 'cpu':
+            ngpu = int(str(device)[-1])
+            x = nn.parallel.data_parallel(self.main, x, range(ngpu))
+        else:
+            x = self.main(x)
         return x
 
 class Discriminator(nn.Module):
     def __init__(self):
         super().__init__()
+        self.main = nn.Sequential(
+            nn.Conv2d(3, 64, 4, 2, 1, bias=False),
+            nn.LeakyReLU(0.2),
 
-        # 3 x 32 x 32
-        self.conv1 = nn.Conv2d(3, 64, 4, 2, 1, bias=False)
-        self.act1 = nn.LeakyReLU(0.2)
+            # 64 x 16 x 16
+            nn.Conv2d(64, 64*2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64*2),
+            nn.LeakyReLU(0.2),
 
-        # 64 x 16 x 16
-        self.conv2 = nn.Conv2d(64, 64*2, 4, 2, 1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64*2)
-        self.act2 = nn.LeakyReLU(0.2)
+            # 128 x 8 x 8
+            nn.Conv2d(64*2, 64*4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64*4),
+            nn.LeakyReLU(0.2),
 
-        # 128 x 8 x 8
-        self.conv3 = nn.Conv2d(64*2, 64*4, 4, 2, 1, bias=False)
-        self.bn2 = nn.BatchNorm2d(64*4)
-        self.act3 = nn.LeakyReLU(0.2)
+            # 256 x 4 x 4
+            nn.Conv2d(64*4, 64*8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64*8),
+            nn.LeakyReLU(0.2),
 
-        # 256 x 4 x 4
-        self.conv4 = nn.Conv2d(64*4, 64*8, 4, 2, 1, bias=False)
-        self.bn3 = nn.BatchNorm2d(64*8)
-        self.act4 = nn.LeakyReLU(0.2)
-
-        # 512 x 2 x 2
-        self.conv5 = nn.Conv2d(64 * 8, 1, 4, 1, 0, bias=False)
-        self.act5 = nn.Sigmoid()
+            # 512 x 2 x 2
+            nn.Conv2d(64 * 8, 1, 4, 1, 0, bias=False),
+            nn.Sigmoid()
+        )
     
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.act1(x)
-
-        x = self.conv2(x)
-        x = self.bn1(x)
-        x = self.act2(x)
-
-        x = self.conv3(x)
-        x = self.bn2(x)
-        x = self.act3(x)
-
-        x = self.conv4(x)
-        x = self.bn3(x)
-        x = self.act4(x)
-        
-        x = self.conv5(x)
-        x = self.act5(x)
+        if str(device) is not 'cpu':
+            ngpu = int(str(device)[-1])
+            x = nn.parallel.data_parallel(self.main, x, range(ngpu))
+        else:
+            x = self.main(x)
         return x.view(-1, 1).squeeze(1)
 
 def weights_init(m):
@@ -119,12 +96,13 @@ def weights_init(m):
 
 trans = transforms.Compose([
     transforms.Resize(64),
+    transforms.CenterCrop(64),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 
 ])
 
-dataset = datasets.CIFAR10(root='./data/cifar10', download=True, transform=trans)
+dataset = datasets.LSUN(root='./data/lsun', transform=trans)
 
 discriminator = Discriminator()
 x = torch.rand(2, 3, 64, 64)
