@@ -107,7 +107,7 @@ class Discriminator(nn.Module):
         
         x = self.conv5(x)
         x = self.act5(x)
-        return x
+        return x.view(-1, 1).squeeze(1)
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -136,7 +136,7 @@ print("G_shape: ", generator.forward(x).shape)
 
 dl = DataLoader(
     mnist_trainset,
-    batch_size=128,
+    batch_size=64,
     shuffle=True,
     num_workers=4
 )
@@ -146,7 +146,7 @@ loss = nn.BCELoss()
 d_optim = torch.optim.Adam(
     discriminator.parameters(),
     lr=0.0002,
-
+    betas=(0.5, 0.999)
 )
 
 g_optim = torch.optim.Adam(
@@ -171,7 +171,7 @@ for epoch in range(N_EPOCHS):
         discriminator.zero_grad()
         real_cpu = data[0].to(device)
         batch_size = real_cpu.size(0)
-        label = torch.full((batch_size, 1, 1, 1), 1, device=device)
+        label = torch.full((batch_size,), 1, device=device)
 
         output = discriminator(real_cpu)
         errD_real = loss(output, label)
