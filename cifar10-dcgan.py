@@ -202,4 +202,4 @@ for epoch in range(N_EPOCHS):
             print("G_loss: ", G_losses[-1])
             fake = generator(torch.randn(64, 100, 1, 1, device=device))
             vutils.save_image(fake.detach(),
-                    './samples/%03d.png' % (epoch), normalize=True)
+                    './samples/cifar10/%03d.png' % (epoch), normalize=True)
