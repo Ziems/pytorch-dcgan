@@ -9,11 +9,10 @@ import torchvision.utils as vutils
 import matplotlib.pyplot as plt
 import os
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+ngpu = 2
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("using " + str(device))
 
-# Based on
-# https://medium.com/@stepanulyanin/dcgan-adventures-with-cifar10-905fb0a24d21
 class Generator(nn.Module):
     def __init__(self):
         super().__init__()
@@ -45,7 +44,6 @@ class Generator(nn.Module):
     def forward(self, x):
         x = x.view(-1, 100, 1, 1)
         if str(device) is not 'cpu':
-            ngpu = int(str(device)[-1])
             x = nn.parallel.data_parallel(self.main, x, range(ngpu))
         else:
             x = self.main(x)
@@ -80,7 +78,6 @@ class Discriminator(nn.Module):
     
     def forward(self, x):
         if str(device) is not 'cpu':
-            ngpu = int(str(device)[-1])
             x = nn.parallel.data_parallel(self.main, x, range(ngpu))
         else:
             x = self.main(x)
@@ -106,11 +103,11 @@ dataset = datasets.LSUN(root='./data/lsun', transform=trans)
 
 discriminator = Discriminator()
 x = torch.rand(2, 3, 64, 64)
-print("D_shape: ", discriminator.forward(x).shape)
+#print("D_shape: ", discriminator.forward(x).shape)
 
 generator = Generator()
 x = torch.rand(2, 100, 1, 1)
-print("G_shape: ", generator.forward(x).shape)
+#print("G_shape: ", generator.forward(x).shape)
 
 dl = DataLoader(
     dataset,
