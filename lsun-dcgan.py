@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import matplotlib.pyplot as plt
 import os
 
-ngpu = 2
+ngpu = 4
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("using " + str(device))
 
@@ -99,7 +99,7 @@ trans = transforms.Compose([
 
 ])
 
-dataset = datasets.LSUN(root='./data/lsun', transform=trans)
+dataset = datasets.LSUN(root='./data/lsun', classes=['tower_train'], transform=trans)
 
 discriminator = Discriminator()
 x = torch.rand(2, 3, 64, 64)
