@@ -99,7 +99,7 @@ trans = transforms.Compose([
 
 ])
 
-dataset = datasets.LSUN(root='./data/lsun/', classes=['tower_train'], transform=trans)
+dataset = datasets.LSUN(root='/data/nmziems/pytorch-dcgan/data/lsun', classes=['tower_train'], transform=trans)
 
 discriminator = Discriminator()
 x = torch.rand(2, 3, 64, 64)
