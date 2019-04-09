@@ -131,6 +131,7 @@ g_optim = torch.optim.Adam(
 )
 
 discriminator = discriminator.to(device)
+Total 3 (delta 2), reused 0 (delta 0)
 discriminator.apply(weights_init)
 
 generator = generator.to(device)
@@ -177,4 +178,4 @@ for epoch in range(N_EPOCHS):
             print("G_loss: ", G_losses[-1])
             fake = generator(torch.randn(64, 100, 1, 1, device=device))
             vutils.save_image(fake.detach(),
-                    './samples/lsun/%03d.png' % (epoch), normalize=True)
+                    '/data/nmziems/pytorch-dcgan/samples/lsun/%03d.png' % (epoch), normalize=True)
