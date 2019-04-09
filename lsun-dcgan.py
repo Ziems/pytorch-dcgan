@@ -131,7 +131,6 @@ g_optim = torch.optim.Adam(
 )
 
 discriminator = discriminator.to(device)
-Total 3 (delta 2), reused 0 (delta 0)
 discriminator.apply(weights_init)
 
 generator = generator.to(device)
